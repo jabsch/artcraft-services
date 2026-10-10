@@ -9,6 +9,8 @@ import {
   KeyboardIcon,
 } from "lucide-react";
 import AppCard from "@/components/apps/app-card";
+import { LauncherDownloadButton } from "@/components/apps/app-downloads";
+import { craftLauncherRecommended } from "@/components/apps/launcher-callout";
 import ShareBar from "@/components/apps/share-bar";
 import {
   CampaignSection,
@@ -23,6 +25,11 @@ import { PageHeader } from "@/components/page/page-header";
 import RevealManager from "@/components/reveal-manager";
 import { Button } from "@/components/ui";
 import { trackAttrs } from "@/lib/analytics";
+import {
+  CRAFT_LAUNCHER_NAME,
+  CRAFT_LAUNCHER_REPO,
+  craftLauncherReleasePageUrl,
+} from "@/lib/craft-launcher";
 import {
   CRAFTING_APPS,
   CRAFTING_APPS_COUNT_WORD,
@@ -65,6 +72,7 @@ const PRINCIPLE_ICONS = [
 ];
 
 export default function CraftingAppsPage() {
+  const launcherDownloads = craftLauncherRecommended();
   return (
     <>
       <RevealManager />
@@ -81,8 +89,19 @@ export default function CraftingAppsPage() {
         }
         lede={`${COVERAGE}. Native, open-source apps from the ArtCraft team, built in Rust and free to use.`}
       >
-        <div data-reveal className="mt-8 flex flex-wrap gap-3">
-          <DiscordButton size="lg">Join the Discord</DiscordButton>
+        <div data-reveal className="mt-8 flex flex-wrap items-start gap-3">
+          {launcherDownloads.length > 0 && (
+            <LauncherDownloadButton
+              recommended={launcherDownloads}
+              fallbackHref={craftLauncherReleasePageUrl()}
+            />
+          )}
+          <DiscordButton
+            size="lg"
+            variant={launcherDownloads.length > 0 ? "secondary" : "primary"}
+          >
+            Join the Discord
+          </DiscordButton>
           <Button
             href={CRAFTING_APPS_GITHUB_ORG}
             variant="secondary"
@@ -94,6 +113,21 @@ export default function CraftingAppsPage() {
             Browse on GitHub
           </Button>
         </div>
+        {launcherDownloads.length > 0 && (
+          <p data-reveal className="mt-4 max-w-xl leading-relaxed text-muted">
+            <span className="text-ink">Recommended:</span> {CRAFT_LAUNCHER_NAME}{" "}
+            installs every app below and keeps them all up to date. Each app
+            also has its own installers on its page.{" "}
+            <a
+              href={CRAFT_LAUNCHER_REPO}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-ink underline decoration-line-strong underline-offset-4 hover:decoration-current"
+            >
+              Learn more
+            </a>
+          </p>
+        )}
         <ShareBar
           url={siteUrl("/apps")}
           text={`Crafting Apps: ${CRAFTING_APPS_COUNT_WORD.toLowerCase()} open-source creative apps from ArtCraft`}

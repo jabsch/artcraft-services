@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import { WindowsIcon } from "@/components/icons";
-import { Button } from "@/components/ui";
+import { Button, type ButtonProps } from "@/components/ui";
 import {
   CRAFT_DESKTOP_PLATFORMS,
   type CraftDesktopPlatform,
@@ -35,9 +35,17 @@ const PLATFORM_ICONS: Record<CraftDesktopPlatform, ReactNode> = {
 /**
  * One card per desktop platform: its recommended build as the main button,
  * then every other file for that platform. The visitor's platform is tagged
- * "Your system" and gets the solid button.
+ * "Your system" and gets the solid button. These are the app's standalone
+ * installers, so every card and button names the app (the launcher above
+ * them installs the whole family).
  */
-export function AppPlatformDownloads({ downloads }: { downloads: CraftDownload[] }) {
+export function AppPlatformDownloads({
+  name,
+  downloads,
+}: {
+  name: string;
+  downloads: CraftDownload[];
+}) {
   const detected = useDetectedDesktop();
 
   return (
@@ -50,7 +58,7 @@ export function AppPlatformDownloads({ downloads }: { downloads: CraftDownload[]
         const others = files.filter((download) => download !== main);
 
         return (
-          <article key={platform} data-reveal className="flex flex-col bg-bg">
+          <article key={platform} data-reveal className="flex min-w-0 flex-col bg-bg">
             <div className="flex items-center justify-between gap-4 border-b border-line px-6 py-2.5 md:px-8">
               <p className="hud-label text-muted">
                 {isDetected ? (
@@ -75,14 +83,16 @@ export function AppPlatformDownloads({ downloads }: { downloads: CraftDownload[]
               <Button
                 href={main.href}
                 variant={isDetected ? "primary" : "secondary"}
-                className="mt-6 w-full"
+                className="mt-6 w-full whitespace-normal text-center"
               >
                 <ArrowDownToLineIcon aria-hidden className="h-4 w-4" />
-                Download for {platform}
+                Download {name} for {platform}
               </Button>
               {others.length > 0 && (
                 <>
-                  <p className="hud-label mt-8 text-faint">Other {platform} downloads</p>
+                  <p className="hud-label mt-8 text-faint">
+                    Other {name} files for {platform}
+                  </p>
                   <ul className="mt-2 border-t border-line">
                     {others.map((download) => (
                       <li key={download.href} className="border-b border-line">
@@ -141,6 +151,47 @@ export function AppHeroDownloadButton({
       <ArrowDownToLineIcon aria-hidden className="h-4 w-4" />
       {mine ? `Download for ${mine.group}` : `Download ${name}`}
     </Button>
+  );
+}
+
+/**
+ * ArtCraft Launcher's CTA: a direct download for the visitor's system once
+ * it is known (with the file's platform and build underneath), else a jump
+ * to `fallbackHref`, where every platform is listed.
+ */
+export function LauncherDownloadButton({
+  recommended,
+  fallbackHref,
+  size = "lg",
+  variant = "primary",
+  fullWidth = false,
+  className,
+}: {
+  recommended: CraftDownload[];
+  fallbackHref: string;
+  size?: ButtonProps["size"];
+  variant?: ButtonProps["variant"];
+  fullWidth?: boolean;
+  className?: string;
+}) {
+  const detected = useDetectedDesktop();
+  const mine = detected && pickDownload(recommended, detected);
+  return (
+    <span className={twMerge("flex flex-col gap-2", className)}>
+      <Button
+        href={mine ? mine.href : fallbackHref}
+        size={size}
+        variant={variant}
+        className={fullWidth ? "w-full" : undefined}
+      >
+        <ArrowDownToLineIcon aria-hidden className="h-4 w-4" />
+        Download ArtCraft Launcher
+      </Button>
+      {/* Reserved line, so the layout doesn't shift when detection lands. */}
+      <span aria-hidden={!mine} className="hud-label min-h-4 text-faint">
+        {mine ? `For ${mine.group} · ${mine.label}` : "\u00a0"}
+      </span>
+    </span>
   );
 }
 
